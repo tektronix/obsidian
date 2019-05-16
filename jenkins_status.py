@@ -305,7 +305,7 @@ def process_args():
                         help='The GPIO pin to use to drive the LED', default=LED_PIN)
     parser.add_argument('-l', '--length', action='store', type=validate_led_count,
                         help='The number of LED in the LED strip', default=LED_COUNT)
-    parser.add_argument('-p', '--pollperiod', action='store', type=validate_poll_period,
+    parser.add_argument('-f', '--pollperiod', action='store', type=validate_poll_period,
                         help='The number of seconds to wait between polling for status.', default=POLL_PERIOD_SECONDS)
 
     return parser.parse_args()
