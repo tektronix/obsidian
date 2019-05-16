@@ -11,8 +11,10 @@ import time
 from neopixel import *
 from requests import get
 
-# LED strip default configuration:
 MAX_LED_COUNT = 10000
+POLL_PERIOD_SECONDS = 10
+
+# LED strip default configuration:
 LED_COUNT = 144  # Number of LED pixels.
 LED_PIN = 18  # GPIO pin connected to the pixels (18 uses PWM!).
 # LED_PIN = 10  # GPIO pin connected to the pixels (10 uses SPI /dev/spidev0.0).
@@ -96,7 +98,7 @@ def theaterChaseRainbow(strip, wait_ms=50):
                 strip.setPixelColor(i + q, 0)
 
 
-def colorShuffle(strip, color, wait_ms=100):
+def colorShuffle(strip, color, wait_ms=50):
     """Shuffle color onto display a pixel at a time."""
     indexes = [i for i in range(strip.numPixels())]
     random.shuffle(indexes)
@@ -202,16 +204,15 @@ def show_failure(strip):
 
 def show_aborted(strip):
     """Animate build result aborted"""
-    colorShuffle(strip, color=COLOR_BLACK, wait_ms=100)
     colorWipe(strip, Color(200, 200, 200), 10)
 
 
 def show_build_started(strip):
     """Animate build started"""
-    colorShuffle(strip, color=COLOR_BLACK, wait_ms=50)
+    colorShuffle(strip, color=COLOR_BLACK, wait_ms=10)
 
 
-def show_build_in_progress(strip, progress):
+def show_build_in_progress(strip, progress, travel_time_s=POLL_PERIOD_SECONDS):
     """
     Animate build in progress
     """
@@ -220,7 +221,7 @@ def show_build_in_progress(strip, progress):
     if pixel == strip.numPixels():
         travel_time_ms = 1000
     else:
-        travel_time_ms = 10000
+        travel_time_ms = travel_time_s * 1000
     progress_bar_tail_entry(strip, pixel, color=COLOR_BLUE, travel_time_ms=travel_time_ms)
 
 
@@ -258,18 +259,14 @@ def light_check(strip):
 
 def validate_brightness_value(value):
     """Validate the brightness value"""
-    min_value = 0
-    max_value = 255
     error_message = "The value of brightness must be between %d and %d."
-    return validate_range(value, min_value, max_value, error_message)
+    return validate_range(value, 0, 255, error_message)
 
 
 def validate_gpio_pin(value):
     """Validate the GPIO pin number"""
-    min_value = 1
-    max_value = 27
     error_message = "GPIO on a Raspberry Pi should be between %d and %d."
-    return validate_range(value, min_value, max_value, error_message)
+    return validate_range(value, 1, 27, error_message)
 
 
 def validate_range(value, min_value, max_value, error_message):
@@ -282,10 +279,15 @@ def validate_range(value, min_value, max_value, error_message):
 
 def validate_led_count(value):
     """Validate the LED Count"""
-    min_value = 1
-    max_value = MAX_LED_COUNT
     error_message = "The number of LED on a single strip should be between %d and %d"
-    return validate_range(value, min_value, max_value, error_message)
+    return validate_range(value, 1, MAX_LED_COUNT, error_message)
+
+
+def validate_poll_period(value):
+    """Validate the period to poll for status"""
+    seconds_per_day = 60 * 60 * 24
+    error_message = "The period to poll for status change should be between between %d and %d"
+    return validate_range(value, 1, seconds_per_day, error_message)
 
 
 def process_args():
@@ -303,6 +305,8 @@ def process_args():
                         help='The GPIO pin to use to drive the LED', default=LED_PIN)
     parser.add_argument('-l', '--length', action='store', type=validate_led_count,
                         help='The number of LED in the LED strip', default=LED_COUNT)
+    parser.add_argument('-p', '--pollperiod', action='store', type=validate_poll_period,
+                        help='The number of seconds to wait between polling for status.', default=POLL_PERIOD_SECONDS)
 
     return parser.parse_args()
 
@@ -344,10 +348,10 @@ if __name__ == '__main__':
                 is_building = True
                 response = get(progress_url)
                 progress = int(response.json()["executor"]["progress"])
-                show_build_in_progress(strip, progress)
+                show_build_in_progress(strip, progress, travel_time_s=args.pollperiod)
             else:
                 if is_building:
-                    show_build_in_progress(strip, 100)
+                    show_build_in_progress(strip, 100, travel_time_s=1)
                     show_build_finished(strip)
                     print("Done with status: %s" % job_status["result"])
                     if job_status["result"] == JENKINS_FAILURE:
