@@ -13,6 +13,7 @@ from requests import get
 
 MAX_LED_COUNT = 10000
 POLL_PERIOD_SECONDS = 10
+CHANNEL_1_PWM_PINS = (13, 19, 41, 45, 53)
 
 # LED strip default configuration:
 LED_COUNT = 144  # Number of LED pixels.
@@ -22,7 +23,6 @@ LED_FREQ_HZ = 800000  # LED signal frequency in hertz (usually 800khz)
 LED_DMA = 10  # DMA channel to use for generating signal (try 10)
 LED_BRIGHTNESS = 55  # Set to 0 for darkest and 255 for brightest
 LED_INVERT = False  # True to invert the signal (when using NPN transistor level shift)
-LED_CHANNEL = 0  # set to '1' for GPIOs 13, 19, 41, 45 or 53
 
 JENKINS_FAILURE = 'FAILURE'
 JENKINS_SUCCESS = 'SUCCESS'
@@ -245,13 +245,24 @@ def light_check(strip):
     head_entry(strip, strip.numPixels(), color=COLOR_WHITE, travel_time_ms=travel_time)
     tail_entry(strip, 0, color=COLOR_WHITE, travel_time_ms=travel_time)
 
-    solid(strip, color=COLOR_RED)
+    colorShuffle(strip, color=COLOR_RED)
     time.sleep(1)
-    solid(strip, color=COLOR_GREEN)
+    colorShuffle(strip, color=COLOR_BLACK)
     time.sleep(1)
-    solid(strip, color=COLOR_BLUE)
+
+    colorShuffle(strip, color=COLOR_GREEN)
     time.sleep(1)
-    solid(strip, color=COLOR_WHITE)
+    colorShuffle(strip, color=COLOR_BLACK)
+    time.sleep(1)
+
+    colorShuffle(strip, color=COLOR_BLUE)
+    time.sleep(1)
+    colorShuffle(strip, color=COLOR_BLACK)
+    time.sleep(1)
+
+    colorShuffle(strip, color=COLOR_WHITE)
+    time.sleep(1)
+    colorShuffle(strip, color=COLOR_BLACK)
     time.sleep(1)
 
     solid(strip, color=COLOR_BLACK)
@@ -261,12 +272,6 @@ def validate_brightness_value(value):
     """Validate the brightness value"""
     error_message = "The value of brightness must be between %d and %d."
     return validate_range(value, 0, 255, error_message)
-
-
-def validate_gpio_pin(value):
-    """Validate the GPIO pin number"""
-    error_message = "GPIO on a Raspberry Pi should be between %d and %d."
-    return validate_range(value, 1, 27, error_message)
 
 
 def validate_range(value, min_value, max_value, error_message):
@@ -298,11 +303,12 @@ def process_args():
                         default=LED_BRIGHTNESS)
     parser.add_argument('-d', '--donotclear', action='store_true',
                         help='Leave the display as is without clearing it on exit')
-    parser.add_argument('-s', '--server', action='store',
-                        help='a URL to a Jenkins Server.  Example:  http://somejenkins.com:8080')
-    parser.add_argument('-j', '--job', action='store', help='Job name')
-    parser.add_argument('-p', '--pin', action='store', type=validate_gpio_pin,
-                        help='The GPIO pin to use to drive the LED', default=LED_PIN)
+    parser.add_argument('-j', '--job', action='store',
+                        help='Jenkins job URL.  Example:  http://somejenkins.com/job/job_name/')
+    parser.add_argument('-p', '--pin', action='store', type=int, choices=[12, 18, 13, 19],
+                        help='The GPIO pin with PWM capable to use to drive the LED.  '
+                             'On the RaspPi3, pins 12 and 18 are on channel 1 and pins 13 and 19 are on ',
+                        default=LED_PIN)
     parser.add_argument('-l', '--length', action='store', type=validate_led_count,
                         help='The number of LED in the LED strip', default=LED_COUNT)
     parser.add_argument('-f', '--pollperiod', action='store', type=validate_poll_period,
@@ -318,20 +324,26 @@ if __name__ == '__main__':
         print("Not enough LED to work with!")
         sys.exit()
 
-    strip = Adafruit_NeoPixel(args.length, args.pin, LED_FREQ_HZ, LED_DMA, LED_INVERT, args.brightness, LED_CHANNEL)
+    print("Pin used %d" % args.pin)
+
+    pwm_channel = 0
+    if args.pin in CHANNEL_1_PWM_PINS:
+        pwm_channel = 1
+
+    strip = Adafruit_NeoPixel(args.length, args.pin, LED_FREQ_HZ, LED_DMA, LED_INVERT, args.brightness, pwm_channel)
     strip.begin()
 
     if args.check:
         light_check(strip)
         sys.exit()
 
-    if not args.server or not args.job:
-        print("A Jenkins Server and a Job name are required to query for status.  "
+    if not args.job:
+        print("A Jenkins Job URL is required to query for its status.  "
               "Run this command again with the -h or --help on how to specify them.")
         sys.exit()
 
-    job_url = args.server + "/job/" + args.job + "/lastBuild/api/json"
-    progress_url = args.server + "/job/" + args.job + "/lastBuild/api/json?tree=executor[progress]"
+    job_url = args.job + "/lastBuild/api/json"
+    progress_url = job_url + "?tree=executor[progress]"
     print('Monitor job: %s' % job_url)
     print("")
     print('Press Ctrl-C to quit.')
