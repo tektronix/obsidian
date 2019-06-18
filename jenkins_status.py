@@ -184,7 +184,7 @@ def progress_bar(strip, percentage, progressColor, remainColor=COLOR_BLACK, wait
     rainbowPixel(strip, finishedProgress, wait_ms=wait_ms)
 
 
-def rainbowPixel(strip, pixel, wait_ms=10):
+def rainbowPixel(strip, pixel, wait_ms=100):
     """Cycle all colors for a given pixel"""
     for j in range(256):
         strip.setPixelColor(pixel, wheel(j))
@@ -334,8 +334,15 @@ if __name__ == '__main__':
     strip.begin()
 
     if args.check:
-        light_check(strip)
-        sys.exit()
+        try:
+            light_check(strip)
+        except KeyboardInterrupt:
+            print("\nKeyboard Interrupt signal received.")
+            if not args.donotclear:
+                print("Clearing all LEDs...")
+                colorWipe(strip, COLOR_BLACK, wait_ms=5)
+        finally:
+            sys.exit()
 
     if not args.job:
         print("A Jenkins Job URL is required to query for its status.  "
@@ -350,32 +357,38 @@ if __name__ == '__main__':
 
     is_building = True
 
-    try:
-        while (True):
-            response = get(job_url, verify=False)
-            job_status = response.json()
-            if job_status["result"] == JENKINS_NO_RESULT:
-                if not is_building:
-                    show_build_started(strip)
-                is_building = True
-                response = get(progress_url)
-                progress = int(response.json()["executor"]["progress"])
-                show_build_in_progress(strip, progress, travel_time_s=args.pollperiod)
-            else:
-                if is_building:
-                    show_build_in_progress(strip, 100, travel_time_s=1)
-                    show_build_finished(strip)
-                    print("Done with status: %s" % job_status["result"])
-                    if job_status["result"] == JENKINS_FAILURE:
-                        show_failure(strip)
-                    elif job_status["result"] == JENKINS_SUCCESS:
-                        show_success(strip)
-                    elif job_status["result"] == JENKINS_ABORTED:
-                        show_aborted(strip)
-                is_building = False
-                time.sleep(5)
-    except KeyboardInterrupt:
-        print("\nKeyboard Interrupt signal received.")
-        if not args.donotclear:
-            print("Clearing all LEDs...")
-            colorWipe(strip, COLOR_BLACK, wait_ms=5)
+    while True:
+        try:
+            while True:
+                response = get(job_url, verify=False)
+                job_status = response.json()
+                if job_status["result"] == JENKINS_NO_RESULT:
+                    if not is_building:
+                        show_build_started(strip)
+                    is_building = True
+                    response = get(progress_url)
+                    progress = int(response.json()["executor"]["progress"])
+                    show_build_in_progress(strip, progress, travel_time_s=args.pollperiod)
+                else:
+                    if is_building:
+                        show_build_in_progress(strip, 100, travel_time_s=1)
+                        show_build_finished(strip)
+                        print("Done with status: %s" % job_status["result"])
+                        if job_status["result"] == JENKINS_FAILURE:
+                            show_failure(strip)
+                        elif job_status["result"] == JENKINS_SUCCESS:
+                            show_success(strip)
+                        elif job_status["result"] == JENKINS_ABORTED:
+                            show_aborted(strip)
+                    is_building = False
+                    time.sleep(5)
+        except KeyboardInterrupt:
+            print("\nKeyboard Interrupt signal received.")
+            if not args.donotclear:
+                print("Clearing all LEDs...")
+                colorWipe(strip, COLOR_BLACK, wait_ms=5)
+            break
+        except:
+            print("\nSleep 1 minutes and will try again")
+            rainbowPixel(strip, 1)
+            time.sleep(60)
