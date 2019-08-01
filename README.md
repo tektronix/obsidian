@@ -1,4 +1,4 @@
-# obsidian
+# obsidian [![Tek-OSS](https://tektronix.github.io/media/TEK-opensource_badge.svg)](https://github.com/tektronix)
 Displays Jenkins build status with a string of RGB LED
 
 ## BOM
