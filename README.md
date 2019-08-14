@@ -1,6 +1,9 @@
 # obsidian [![Tek-OSS](https://tektronix.github.io/media/TEK-opensource_badge.svg)](https://github.com/tektronix)
 Displays Jenkins build status with a string of RGB LED
 
+## Maintainer
+* [Hong Quach](https://github.com/htquach)
+
 ## BOM
 1. A Raspberry Pi with Raspbian OS
     * CanaKit Raspberry Pi 3 B+ (B Plus) with Premium Clear Case and 2.5A Power Supply
