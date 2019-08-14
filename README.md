@@ -9,7 +9,7 @@ Displays Jenkins build status with a string of RGB LED
 ## BOM
 
 1.  A Raspberry Pi with Raspbian OS
-    -   CanaKit Raspberry Pi 3 B+ (B Plus) with Premium Clear Case and 2.5A Power Supply
+    -   CanaKit Raspberry Pi 3 B+ (B Plus) with Premium Clear Case and 2.5A Power Supply 
     -   A microSD card for the Raspberry Pi to run the Raspbian OS
 2.  WS2812B addressable RGB LED strip 
     -   2x WS2812B RGB 144 LED Strip Light 5V White PCB Waterproof IP67)
