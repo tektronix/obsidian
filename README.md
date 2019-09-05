@@ -1,4 +1,4 @@
-# obsidian [![Tek-OSS](https://tektronix.github.io/media/TEK-opensource_badge.svg)](https://github.com/tektronix) [![CodeFactor](https://www.codefactor.io/repository/github/tektronix/obsidian/badge)](https://www.codefactor.io/repository/github/tektronix/obsidian)
+# obsidian [![Tek-OSS](https://tektronix.github.io/media/TEK-opensource_badge.svg)](https://github.com/tektronix) [![CodeFactor](https://www.codefactor.io/repository/github/tektronix/obsidian/badge)](https://www.codefactor.io/repository/github/tektronix/obsidian)  [![Total alerts](https://img.shields.io/lgtm/alerts/g/tektronix/obsidian.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/tektronix/obsidian/alerts/)
 
 Displays Jenkins build status with a string of RGB LED
 
