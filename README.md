@@ -1,4 +1,4 @@
-# obsidian [![Tek-OSS](https://tektronix.github.io/media/TEK-opensource_badge.svg)](https://github.com/tektronix)
+# obsidian [![Tek-OSS](https://tektronix.github.io/media/TEK-opensource_badge.svg)](https://github.com/tektronix) [![CodeFactor](https://www.codefactor.io/repository/github/tektronix/obsidian/badge)](https://www.codefactor.io/repository/github/tektronix/obsidian)
 
 Displays Jenkins build status with a string of RGB LED
 
