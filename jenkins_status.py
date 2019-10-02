@@ -8,7 +8,7 @@ import random
 import sys
 import time
 
-from neopixel import *
+from rpi_ws281x import Adafruit_NeoPixel, Color
 from requests import get
 
 MAX_LED_COUNT = 10000
@@ -29,8 +29,8 @@ JENKINS_SUCCESS = 'SUCCESS'
 JENKINS_ABORTED = 'ABORTED'
 JENKINS_NO_RESULT = None
 
-COLOR_RED = Color(0, 255, 0)
-COLOR_GREEN = Color(255, 0, 0)
+COLOR_RED = Color(255, 0, 0)
+COLOR_GREEN = Color(0, 255, 0)
 COLOR_BLUE = Color(0, 0, 255)
 COLOR_WHITE = Color(255, 255, 255)
 COLOR_BLACK = Color(0, 0, 0)
@@ -59,10 +59,10 @@ def theaterChase(strip, color, wait_ms=50, iterations=10):
 def wheel(pos):
     """Generate rainbow colors across 0-255 positions."""
     if pos < 85:
-        return Color(pos * 3, 255 - pos * 3, 0)
+        return Color(255 - pos * 3, 0, pos * 3)
     elif pos < 170:
         pos -= 85
-        return Color(255 - pos * 3, 0, pos * 3)
+        return Color(pos * 3, 255 - pos * 3, 0)
     else:
         pos -= 170
         return Color(0, pos * 3, 255 - pos * 3)
@@ -216,7 +216,7 @@ def show_build_in_progress(strip, progress, travel_time_s=POLL_PERIOD_SECONDS):
     """
     Animate build in progress
     """
-    pixel = progress * strip.numPixels() / 100
+    pixel = int(progress * strip.numPixels() / 100)
     print("progress=%s%% => pixel=%s" % (progress, pixel))
     if pixel == strip.numPixels():
         travel_time_ms = 1000
@@ -305,6 +305,8 @@ def process_args():
                         help='Leave the display as is without clearing it on exit')
     parser.add_argument('-j', '--job', action='store',
                         help='Jenkins job URL.  Example:  http://somejenkins.com/job/job_name/')
+    parser.add_argument('-s', '--verifyssl', action='store_true',
+                        help='Verify SSL when provided HTTPS URL')
     parser.add_argument('-p', '--pin', action='store', type=int, choices=[12, 18, 13, 19],
                         help='The GPIO pin with PWM capable to use to drive the LED.  '
                              'On the RaspPi3, pins 12 and 18 are on channel 1 and pins 13 and 19 are on ',
@@ -360,7 +362,7 @@ if __name__ == '__main__':
     while True:
         try:
             while True:
-                response = get(job_url, verify=False)
+                response = get(job_url, verify=args.verifyssl)
                 job_status = response.json()
                 if job_status["result"] == JENKINS_NO_RESULT:
                     if not is_building:
@@ -388,7 +390,8 @@ if __name__ == '__main__':
                 print("Clearing all LEDs...")
                 colorWipe(strip, COLOR_BLACK, wait_ms=5)
             sys.exit()
-        except Exception:
+        except Exception as e:
+            print(e)
             print("\nSleep 1 minutes and will try again")
             rainbowPixel(strip, 1)
             time.sleep(60)
