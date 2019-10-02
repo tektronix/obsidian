@@ -6,6 +6,7 @@
 import argparse
 import random
 import sys
+import datetime
 import time
 
 from rpi_ws281x import Adafruit_NeoPixel, Color
@@ -36,7 +37,7 @@ COLOR_WHITE = Color(255, 255, 255)
 COLOR_BLACK = Color(0, 0, 0)
 
 
-def colorWipe(strip, color, wait_ms=50):
+def color_wipe(strip, color, wait_ms=50):
     """Wipe color across display a pixel at a time."""
     for i in range(strip.numPixels()):
         strip.setPixelColor(i, color)
@@ -44,7 +45,7 @@ def colorWipe(strip, color, wait_ms=50):
         time.sleep(wait_ms / 1000.0)
 
 
-def theaterChase(strip, color, wait_ms=50, iterations=10):
+def theater_chase(strip, color, wait_ms=50, iterations=10):
     """Movie theater light style chaser animation."""
     for j in range(iterations):
         for q in range(3):
@@ -59,10 +60,10 @@ def theaterChase(strip, color, wait_ms=50, iterations=10):
 def wheel(pos):
     """Generate rainbow colors across 0-255 positions."""
     if pos < 85:
-        return Color(255 - pos * 3, 0, pos * 3)
+        return Color(pos * 3, 255 - pos * 3, 0)
     elif pos < 170:
         pos -= 85
-        return Color(pos * 3, 255 - pos * 3, 0)
+        return Color(255 - pos * 3, 0, pos * 3)
     else:
         pos -= 170
         return Color(0, pos * 3, 255 - pos * 3)
@@ -77,7 +78,7 @@ def rainbow(strip, wait_ms=20, iterations=1):
         time.sleep(wait_ms / 1000.0)
 
 
-def rainbowCycle(strip, wait_ms=20, iterations=5):
+def rainbow_cycle(strip, wait_ms=20, iterations=5):
     """Draw rainbow that uniformly distributes itself across all pixels."""
     for j in range(256 * iterations):
         for i in range(strip.numPixels()):
@@ -86,7 +87,7 @@ def rainbowCycle(strip, wait_ms=20, iterations=5):
         time.sleep(wait_ms / 1000.0)
 
 
-def theaterChaseRainbow(strip, wait_ms=50):
+def theater_chase_rainbow(strip, wait_ms=50):
     """Rainbow movie theater light style chaser animation."""
     for j in range(256):
         for q in range(3):
@@ -98,7 +99,7 @@ def theaterChaseRainbow(strip, wait_ms=50):
                 strip.setPixelColor(i + q, 0)
 
 
-def colorShuffle(strip, color, wait_ms=50):
+def color_shuffle(strip, color, wait_ms=50):
     """Shuffle color onto display a pixel at a time."""
     indexes = [i for i in range(strip.numPixels())]
     random.shuffle(indexes)
@@ -181,10 +182,10 @@ def progress_bar(strip, percentage, progressColor, remainColor=COLOR_BLACK, wait
     for index in range(finishedProgress, strip.numPixels()):
         strip.setPixelColor(index, remainColor)
         strip.show()
-    rainbowPixel(strip, finishedProgress, wait_ms=wait_ms)
+    rainbow_pixel(strip, finishedProgress, wait_ms=wait_ms)
 
 
-def rainbowPixel(strip, pixel, wait_ms=100):
+def rainbow_pixel(strip, pixel, wait_ms=100):
     """Cycle all colors for a given pixel"""
     for j in range(256):
         strip.setPixelColor(pixel, wheel(j))
@@ -192,24 +193,31 @@ def rainbowPixel(strip, pixel, wait_ms=100):
         time.sleep(wait_ms / 1000.0)
 
 
+def rainbow_pixel_duration(strip, pixel, duration=10):
+    """Animate rainbow for a fixed duration in seconds"""
+    et = datetime.datetime.now() + datetime.timedelta(0, duration)
+    while (et > datetime.datetime.now()):
+        rainbow_pixel(strip, pixel, wait_ms=10)
+
+
 def show_success(strip):
     """Animate build result success"""
-    colorWipe(strip, COLOR_GREEN, 10)
+    color_wipe(strip, COLOR_GREEN, 10)
 
 
 def show_failure(strip):
     """Animate build result failure"""
-    colorWipe(strip, COLOR_RED, 10)
+    color_wipe(strip, COLOR_RED, 10)
 
 
 def show_aborted(strip):
     """Animate build result aborted"""
-    colorWipe(strip, Color(200, 200, 200), 10)
+    color_wipe(strip, Color(200, 200, 200), 10)
 
 
 def show_build_started(strip):
     """Animate build started"""
-    colorShuffle(strip, color=COLOR_BLACK, wait_ms=10)
+    color_shuffle(strip, color=COLOR_BLACK, wait_ms=10)
 
 
 def show_build_in_progress(strip, progress, travel_time_s=POLL_PERIOD_SECONDS):
@@ -227,7 +235,7 @@ def show_build_in_progress(strip, progress, travel_time_s=POLL_PERIOD_SECONDS):
 
 def show_build_finished(strip):
     """Animate build is finished"""
-    theaterChase(strip, Color(153, 0, 153), iterations=20)
+    theater_chase(strip, COLOR_WHITE, iterations=20)
 
 
 def light_check(strip):
@@ -245,24 +253,24 @@ def light_check(strip):
     head_entry(strip, strip.numPixels(), color=COLOR_WHITE, travel_time_ms=travel_time)
     tail_entry(strip, 0, color=COLOR_WHITE, travel_time_ms=travel_time)
 
-    colorShuffle(strip, color=COLOR_RED)
+    color_shuffle(strip, color=COLOR_RED)
     time.sleep(1)
-    colorShuffle(strip, color=COLOR_BLACK)
-    time.sleep(1)
-
-    colorShuffle(strip, color=COLOR_GREEN)
-    time.sleep(1)
-    colorShuffle(strip, color=COLOR_BLACK)
+    color_shuffle(strip, color=COLOR_BLACK)
     time.sleep(1)
 
-    colorShuffle(strip, color=COLOR_BLUE)
+    color_shuffle(strip, color=COLOR_GREEN)
     time.sleep(1)
-    colorShuffle(strip, color=COLOR_BLACK)
+    color_shuffle(strip, color=COLOR_BLACK)
     time.sleep(1)
 
-    colorShuffle(strip, color=COLOR_WHITE)
+    color_shuffle(strip, color=COLOR_BLUE)
     time.sleep(1)
-    colorShuffle(strip, color=COLOR_BLACK)
+    color_shuffle(strip, color=COLOR_BLACK)
+    time.sleep(1)
+
+    color_shuffle(strip, color=COLOR_WHITE)
+    time.sleep(1)
+    color_shuffle(strip, color=COLOR_BLACK)
     time.sleep(1)
 
     solid(strip, color=COLOR_BLACK)
@@ -342,7 +350,7 @@ if __name__ == '__main__':
             print("\nKeyboard Interrupt signal received.")
             if not args.donotclear:
                 print("Clearing all LEDs...")
-                colorWipe(strip, COLOR_BLACK, wait_ms=5)
+                color_wipe(strip, COLOR_BLACK, wait_ms=5)
         finally:
             sys.exit()
 
@@ -388,10 +396,9 @@ if __name__ == '__main__':
             print("\nKeyboard Interrupt signal received.")
             if not args.donotclear:
                 print("Clearing all LEDs...")
-                colorWipe(strip, COLOR_BLACK, wait_ms=5)
+                color_wipe(strip, COLOR_BLACK, wait_ms=5)
             sys.exit()
         except Exception as e:
             print(e)
             print("\nSleep 1 minutes and will try again")
-            rainbowPixel(strip, 1)
-            time.sleep(60)
+            rainbow_pixel_duration(strip, 1, 60)
