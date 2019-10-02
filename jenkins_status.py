@@ -368,7 +368,7 @@ if __name__ == '__main__':
                     if not is_building:
                         show_build_started(strip)
                     is_building = True
-                    response = get(progress_url)
+                    response = get(progress_url, verify=args.verifyssl)
                     progress = int(response.json()["executor"]["progress"])
                     show_build_in_progress(strip, progress, travel_time_s=args.pollperiod)
                 else:
