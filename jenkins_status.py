@@ -382,13 +382,13 @@ if __name__ == '__main__':
                             show_aborted(strip)
                     is_building = False
                     time.sleep(5)
-        except KeyboardInterrupt:
+        except (KeyboardInterrupt, SystemExit):
             print("\nKeyboard Interrupt signal received.")
             if not args.donotclear:
                 print("Clearing all LEDs...")
                 colorWipe(strip, COLOR_BLACK, wait_ms=5)
-            break
-        except:
+            sys.exit()
+        except Exception:
             print("\nSleep 1 minutes and will try again")
             rainbowPixel(strip, 1)
             time.sleep(60)
